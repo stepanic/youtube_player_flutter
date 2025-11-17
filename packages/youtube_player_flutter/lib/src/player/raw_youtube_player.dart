@@ -244,6 +244,35 @@ class _RawYoutubePlayerState extends State<RawYoutubePlayer>
                 width: 100%;
                 pointer-events: none;
             }
+
+            /* Hide YouTube player controls globally */
+            iframe {
+                pointer-events: auto;
+            }
+
+            /* Add overlay to hide bottom controls area */
+            #player {
+                position: relative;
+                height: 100%;
+                width: 100%;
+            }
+
+            #player::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: transparent;
+                pointer-events: none;
+                z-index: 9999;
+            }
+
+            /* Try to hide controls with aggressive CSS */
+            #player iframe {
+                overflow: hidden !important;
+            }
         </style>
         <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
     </head>
@@ -277,14 +306,51 @@ class _RawYoutubePlayerState extends State<RawYoutubePlayer>
                         'end': ${controller!.flags.endAt}
                     },
                     events: {
-                        onReady: function(event) { window.flutter_inappwebview.callHandler('Ready'); },
-                        onStateChange: function(event) { sendPlayerStateChange(event.data); },
+                        onReady: function(event) {
+                            window.flutter_inappwebview.callHandler('Ready');
+                            hideYouTubeControls();
+                        },
+                        onStateChange: function(event) {
+                            sendPlayerStateChange(event.data);
+                            hideYouTubeControls();
+                        },
                         onPlaybackQualityChange: function(event) { window.flutter_inappwebview.callHandler('PlaybackQualityChange', event.data); },
                         onPlaybackRateChange: function(event) { window.flutter_inappwebview.callHandler('PlaybackRateChange', event.data); },
                         onError: function(error) { window.flutter_inappwebview.callHandler('Errors', error.data); }
                     },
                 });
             }
+
+            function hideYouTubeControls() {
+                try {
+                    var iframe = document.querySelector('iframe');
+                    if (iframe) {
+                        // Try to access iframe document and inject CSS
+                        // Note: This will fail due to CORS policy, but we try anyway
+                        try {
+                            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            if (iframeDoc) {
+                                var style = iframeDoc.getElementById('hide-controls-style');
+                                if (!style) {
+                                    style = iframeDoc.createElement('style');
+                                    style.id = 'hide-controls-style';
+                                    style.innerHTML = '#player-controls { display: none !important; } .ytp-chrome-top { display: none !important; } .ytp-title { display: none !important; } .ytp-gradient-top { display: none !important; } .ytp-pause-overlay { display: none !important; }';
+                                    iframeDoc.head.appendChild(style);
+                                    console.log('✓ CSS injected successfully!');
+                                }
+                            }
+                        } catch (e) {
+                            // CORS blocks access - this is expected and normal
+                            // The Flutter overlay will handle hiding controls instead
+                        }
+                    }
+                } catch (e) {
+                    // Ignore errors
+                }
+            }
+
+            // Attempt CSS injection periodically (will mostly fail due to CORS)
+            setInterval(hideYouTubeControls, 100);
 
             function sendPlayerStateChange(playerState) {
                 clearTimeout(timerId);

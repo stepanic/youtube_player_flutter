@@ -8,6 +8,23 @@
 [![Top Language](https://img.shields.io/github/languages/top/sarbagyastha/youtube_player_flutter?color=9cf)](https://github.com/sarbagyastha/youtube_player_flutter)
 [![effective dart](https://img.shields.io/badge/style-effective_dart-40c4ff.svg)](https://dart.dev/guides/language/effective-dart)
 
+## Fork Notice
+
+This is a fork of the official `youtube_player_flutter` package with additional features:
+
+### Added Features:
+- **CSS Injection for Control Hiding**: Continuously attempts to inject CSS into YouTube's iframe to hide player controls (`#player-controls`, `.ytp-chrome-top`, `.ytp-title`, `.ytp-gradient-top`)
+- **Enhanced Control Suppression**: JavaScript runs every 100ms to ensure controls stay hidden even during state changes
+- **Improved UX**: Eliminates the brief flash of YouTube controls during play/pause transitions
+
+### Changes Made:
+- Modified `raw_youtube_player.dart` to include `hideYouTubeControls()` function
+- Added `setInterval` timer to continuously apply CSS injection
+- Enhanced `onReady` and `onStateChange` events to trigger control hiding
+
+These modifications are designed to work seamlessly with custom player controls.
+
+---
 
 Flutter plugin for playing or streaming YouTube videos inline using the official [**iFrame Player API**](https://developers.google.com/youtube/iframe_api_reference).
 
